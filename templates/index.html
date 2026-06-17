@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>약쏙 ✈️</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif; background: #f7f5f0; min-height: 100vh; color: #1a1a1a; }
+
+  .header { background: #fff; border-bottom: 1px solid #eee; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  .logo span { color: #5b6af0; }
+  .user-name { font-size: 13px; color: #888; cursor: pointer; }
+  .user-name:hover { color: #5b6af0; }
+
+  .tabs { display: flex; background: #fff; border-bottom: 1px solid #eee; }
+  .tab { flex: 1; padding: 14px; text-align: center; font-size: 14px; font-weight: 500; color: #aaa; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .tab.active { color: #5b6af0; border-bottom-color: #5b6af0; }
+
+  .page { display: none; padding: 20px; }
+  .page.active { display: block; }
+
+  .card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: #1a1a1a; }
+
+  .section-label { font-size: 12px; color: #888; font-weight: 500; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  input[type=text], input[type=date], textarea { width: 100%; border: 1.5px solid #eee; border-radius: 10px; padding: 11px 14px; font-size: 14px; font-family: inherit; outline: none; transition: border 0.2s; background: #fafafa; }
+  input:focus, textarea:focus { border-color: #5b6af0; background: #fff; }
+  textarea { resize: none; height: 80px; }
+
+  .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 4px; }
+  .time-btn { border: 1.5px solid #eee; background: #fafafa; border-radius: 10px; padding: 10px 6px; font-size: 13px; cursor: pointer; text-align: center; transition: all 0.2s; color: #555; }
+  .time-btn.selected { background: #eef0fd; border-color: #5b6af0; color: #5b6af0; font-weight: 600; }
+
+  .place-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .place-btn { border: 1.5px solid #eee; background: #fafafa; border-radius: 20px; padding: 8px 14px; font-size: 13px; cursor: pointer; transition: all 0.2s; color: #555; }
+  .place-btn.selected { background: #eef0fd; border-color: #5b6af0; color: #5b6af0; font-weight: 600; }
+
+  .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .btn-primary { background: #5b6af0; color: #fff; }
+  .btn-primary:active { transform: scale(0.98); background: #4a59df; }
+  .btn-secondary { background: #f0f0f0; color: #555; }
+  .btn-danger { background: #ff4d4d; color: #fff; }
+  .btn-sm { width: auto; padding: 8px 16px; font-size: 13px; border-radius: 8px; }
+
+  .divider { height: 1px; background: #f0f0f0; margin: 16px 0; }
+
+  /* 종이비행기 애니메이션 */
+  .plane-container { text-align: center; padding: 30px 0; }
+  .plane-emoji { font-size: 60px; display: inline-block; animation: fly 2s ease-in-out infinite; }
+  @keyframes fly { 0%,100% { transform: translateX(0) translateY(0) rotate(-5deg); } 50% { transform: translateX(20px) translateY(-10px) rotate(5deg); } }
+
+  .invite-card { background: linear-gradient(135deg, #eef0fd 0%, #f5f0ff 100%); border: 2px solid #c7ccf8; border-radius: 20px; padding: 24px; text-align: center; }
+  .invite-emoji { font-size: 40px; margin-bottom: 12px; }
+  .invite-host { font-size: 13px; color: #7b84e8; margin-bottom: 6px; }
+  .invite-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #3a3f9e; }
+  .invite-detail { background: rgba(255,255,255,0.7); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; text-align: left; font-size: 14px; color: #444; }
+  .invite-detail span { float: right; font-weight: 600; color: #3a3f9e; }
+
+  .respond-btns { display: flex; gap: 10px; margin-top: 16px; }
+  .respond-btns .btn { flex: 1; }
+
+  .tag { display: inline-block; background: #eef0fd; color: #5b6af0; font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: 600; margin: 2px; }
+
+  .pending-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+  .pending-item:last-child { border-bottom: none; }
+
+  .link-box { background: #f0f1fe; border-radius: 10px; padding: 12px; font-size: 13px; color: #5b6af0; word-break: break-all; margin-bottom: 12px; cursor: pointer; }
+
+  /* 모달 */
+  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: flex-end; justify-content: center; }
+  .modal-bg.open { display: flex; }
+  .modal { background: #fff; border-radius: 24px 24px 0 0; padding: 28px 20px 40px; width: 100%; max-width: 480px; animation: slideUp 0.3s ease; }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  /* 투표 돌림판 */
+  .spinner-wrap { text-align: center; padding: 20px 0; }
+  #spinnerCanvas { border-radius: 50%; }
+  .spinner-result { font-size: 20px; font-weight: 700; color: #5b6af0; margin-top: 16px; }
+
+  .empty { text-align: center; padding: 40px 20px; color: #bbb; font-size: 14px; }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+  .mt { margin-top: 12px; }
+  .mb { margin-bottom: 12px; }
+  .gap { gap: 8px; }
+  .flex { display: flex; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">약<span>쏙</span> ✈️</div>
+  <div class="user-name" onclick="changeName()">👤 {{ username }}</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('today')">당일 약속</div>
+  <div class="tab" onclick="switchTab('longterm')">장기 약속</div>
+  <div class="tab" onclick="switchTab('invite')">초대장 열기</div>
+</div>
+
+<!-- 당일 약속 탭 -->
+<div class="page active" id="page-today">
+  <div class="card">
+    <div class="card-title">✈️ 당일 약속 만들기</div>
+    <div class="section-label">시간대 선택 (복수 가능)</div>
+    <div class="time-grid" id="timeGrid"></div>
+    <div class="divider"></div>
+    <div class="section-label">장소</div>
+    <div class="place-btns" id="placePresets">
+      <div class="place-btn selected" data-place="미정" onclick="selectPlace(this)">📍 미정</div>
+      <div class="place-btn" data-place="홍대" onclick="selectPlace(this)">홍대</div>
+      <div class="place-btn" data-place="강남" onclick="selectPlace(this)">강남</div>
+      <div class="place-btn" data-place="신촌" onclick="selectPlace(this)">신촌</div>
+      <div class="place-btn" data-place="직접입력" onclick="selectPlace(this)">✏️ 직접입력</div>
+    </div>
+    <input type="text" id="customPlace" placeholder="장소 입력" style="display:none; margin-bottom:12px;">
+    <div class="divider"></div>
+    <div class="section-label">하고 싶은 말 (선택)</div>
+    <textarea id="todayMsg" placeholder="친구들에게 한마디..."></textarea>
+    <div class="mt">
+      <button class="btn btn-primary" onclick="createToday()">종이비행기 보내기 ✈️</button>
+    </div>
+  </div>
+</div>
+
+<!-- 장기 약속 탭 -->
+<div class="page" id="page-longterm">
+  <div class="card">
+    <div class="card-title">📅 장기 약속 만들기</div>
+    <div class="section-label">날짜 선택 (복수 가능)</div>
+    <div id="dateList" style="margin-bottom:10px;"></div>
+    <div class="flex gap mb">
+      <input type="date" id="dateInput" style="flex:1;">
+      <button class="btn btn-secondary btn-sm" onclick="addDate()" style="white-space:nowrap;">+ 추가</button>
+    </div>
+    <div class="divider"></div>
+    <div class="section-label">장소</div>
+    <input type="text" id="longtermPlace" placeholder="장소 입력 (미정이면 비워두세요)">
+    <div class="divider"></div>
+    <div class="section-label">하고 싶은 말 (선택)</div>
+    <textarea id="longtermMsg" placeholder="친구들에게 한마디..."></textarea>
+    <div class="mt">
+      <button class="btn btn-primary" onclick="createLongterm()">종이비행기 보내기 ✈️</button>
+    </div>
+  </div>
+</div>
+
+<!-- 초대장 열기 탭 -->
+<div class="page" id="page-invite">
+  <div class="card">
+    <div class="section-label">초대 링크 또는 코드 입력</div>
+    <div class="flex gap">
+      <input type="text" id="inviteCode" placeholder="약속 코드 입력 (예: a1b2c3d4)" style="flex:1;">
+      <button class="btn btn-primary btn-sm" onclick="openInvite()">열기</button>
+    </div>
+  </div>
+  <div id="inviteContent"></div>
+</div>
+
+<!-- 약속 완료 모달 -->
+<div class="modal-bg" id="createdModal">
+  <div class="modal">
+    <div class="plane-container">
+      <div class="plane-emoji">✈️</div>
+    </div>
+    <div style="text-align:center; margin-bottom:20px;">
+      <div style="font-size:18px; font-weight:700; margin-bottom:6px;">약속이 만들어졌어요!</div>
+      <div style="font-size:14px; color:#888;">친구들에게 코드를 공유해보세요</div>
+    </div>
+    <div class="link-box" id="shareCode" onclick="copyCode()">코드 복사하기</div>
+    <div id="hostPanel"></div>
+    <button class="btn btn-secondary mt" onclick="closeModal('createdModal')">닫기</button>
+  </div>
+</div>
+
+<!-- 초대장 모달 -->
+<div class="modal-bg" id="inviteModal">
+  <div class="modal" id="inviteModalContent"></div>
+</div>
+
+<!-- 돌림판 모달 -->
+<div class="modal-bg" id="spinnerModal">
+  <div class="modal">
+    <div class="card-title" style="text-align:center;">🎡 장소 랜덤 결정</div>
+    <div class="spinner-wrap">
+      <canvas id="spinnerCanvas" width="260" height="260"></canvas>
+      <div class="spinner-result" id="spinnerResult"></div>
+    </div>
+    <button class="btn btn-primary mt" onclick="spinWheel()">돌리기!</button>
+    <button class="btn btn-secondary mt" onclick="closeModal('spinnerModal')">닫기</button>
+  </div>
+</div>
+
+<script>
+const TIMES = ["오전 6-8시","오전 8-10시","오전 10-12시","오후 12-2시","오후 2-4시","오후 4-6시","오후 6-8시","오후 8-10시","오후 10-12시"];
+let selectedTimes = [];
+let selectedPlace = "미정";
+let selectedDates = [];
+let currentAid = null;
+let spinItems = [];
+
+function init() {
+  const grid = document.getElementById("timeGrid");
+  TIMES.forEach(t => {
+    const btn = document.createElement("div");
+    btn.className = "time-btn";
+    btn.textContent = t;
+    btn.onclick = () => toggleTime(btn, t);
+    grid.appendChild(btn);
+  });
+}
+
+function toggleTime(btn, t) {
+  if (selectedTimes.includes(t)) {
+    selectedTimes = selectedTimes.filter(x => x !== t);
+    btn.classList.remove("selected");
+  } else {
+    selectedTimes.push(t);
+    btn.classList.add("selected");
+  }
+}
+
+function selectPlace(el) {
+  document.querySelectorAll(".place-btn").forEach(b => b.classList.remove("selected"));
+  el.classList.add("selected");
+  selectedPlace = el.dataset.place;
+  const custom = document.getElementById("customPlace");
+  custom.style.display = selectedPlace === "직접입력" ? "block" : "none";
+}
+
+function switchTab(tab) {
+  document.querySelectorAll(".tab").forEach((t,i) => t.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  const tabs = ["today","longterm","invite"];
+  const idx = tabs.indexOf(tab);
+  document.querySelectorAll(".tab")[idx].classList.add("active");
+  document.getElementById("page-"+tab).classList.add("active");
+}
+
+function addDate() {
+  const val = document.getElementById("dateInput").value;
+  if (!val || selectedDates.includes(val)) return;
+  selectedDates.push(val);
+  renderDates();
+  document.getElementById("dateInput").value = "";
+}
+
+function renderDates() {
+  const el = document.getElementById("dateList");
+  el.innerHTML = selectedDates.map(d => `<span class="tag">${d} <span onclick="removeDate('${d}')" style="cursor:pointer;">×</span></span>`).join("");
+}
+
+function removeDate(d) {
+  selectedDates = selectedDates.filter(x => x !== d);
+  renderDates();
+}
+
+async function createToday() {
+  const place = selectedPlace === "직접입력" ? document.getElementById("customPlace").value : selectedPlace;
+  if (!selectedTimes.length) return alert("시간대를 선택해주세요!");
+  const res = await fetch("/create", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"today", times: selectedTimes, place: place || "미정", message: document.getElementById("todayMsg").value }) });
+  const data = await res.json();
+  if (data.ok) showCreated(data.id);
+}
+
+async function createLongterm() {
+  if (!selectedDates.length) return alert("날짜를 선택해주세요!");
+  const res = await fetch("/create", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"longterm", date: selectedDates.join(", "), place: document.getElementById("longtermPlace").value || "미정", message: document.getElementById("longtermMsg").value }) });
+  const data = await res.json();
+  if (data.ok) showCreated(data.id);
+}
+
+async function showCreated(aid) {
+  currentAid = aid;
+  document.getElementById("shareCode").textContent = `📋 코드: ${aid} (탭해서 복사)`;
+  document.getElementById("shareCode").setAttribute("data-code", aid);
+  const data = await fetchAppt(aid);
+  renderHostPanel(data.appointment);
+  document.getElementById("createdModal").classList.add("open");
+  startPolling(aid);
+}
+
+function renderHostPanel(appt) {
+  const panel = document.getElementById("hostPanel");
+  let html = "";
+  if (appt.pending && appt.pending.length > 0) {
+    html += `<div class="card-title" style="margin-top:16px;">✋ 승낙 대기 중</div>`;
+    appt.pending.forEach(name => {
+      html += `<div class="pending-item"><span>${name}님이 참여를 원해요</span><button class="btn btn-primary btn-sm" onclick="approve('${appt.id}','${name}')">추가하기</button></div>`;
+    });
+  }
+  if (appt.participants.length > 1) {
+    html += `<div style="margin-top:12px;"><div class="section-label">참여자</div>${appt.participants.map(p=>`<span class="tag">${p}</span>`).join("")}</div>`;
+  }
+  if (!appt.confirmed) {
+    html += `<button class="btn btn-danger mt" style="margin-top:16px;" onclick="confirmAppt('${appt.id}')">약속 확정하기</button>`;
+  } else {
+    html += `<div style="text-align:center; padding:12px; color:#5b6af0; font-weight:600;">✅ 확정된 약속이에요</div>`;
+  }
+  panel.innerHTML = html;
+}
+
+async function approve(aid, name) {
+  await fetch(`/approve/${aid}`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ name }) });
+  const data = await fetchAppt(aid);
+  renderHostPanel(data.appointment);
+}
+
+async function confirmAppt(aid) {
+  await fetch(`/confirm/${aid}`, { method:"POST" });
+  const data = await fetchAppt(aid);
+  renderHostPanel(data.appointment);
+}
+
+function copyCode() {
+  const code = document.getElementById("shareCode").getAttribute("data-code");
+  navigator.clipboard.writeText(code).then(() => alert("코드가 복사됐어요!"));
+}
+
+async function openInvite() {
+  const code = document.getElementById("inviteCode").value.trim();
+  if (!code) return;
+  const data = await fetchAppt(code);
+  if (!data.ok) return alert("없는 약속이에요!");
+  showInviteCard(data.appointment, false);
+}
+
+function showInviteCard(appt, inModal=true) {
+  const isToday = appt.type === "today";
+  let html = `
+    <div class="invite-card">
+      <div class="invite-emoji">${isToday ? "🗓️" : "📅"}</div>
+      <div class="invite-host">${appt.host}님의 초대</div>
+      <div class="invite-title">${isToday ? "당일 약속" : "장기 약속"}</div>
+      ${isToday ? `<div class="invite-detail">시간대 <span>${appt.times.join(", ")}</span></div>` : `<div class="invite-detail">날짜 <span>${appt.date}</span></div>`}
+      <div class="invite-detail">장소 <span>${appt.place}</span></div>
+      ${appt.message ? `<div class="invite-detail" style="font-style:italic; color:#666;">"${appt.message}"</div>` : ""}
+      <div class="invite-detail">참여자 <span>${appt.participants.join(", ")}</span></div>
+      ${appt.confirmed ? `<div style="margin-top:12px; color:#5b6af0; font-weight:600;">✅ 확정된 약속</div>` : `
+        <div class="respond-btns">
+          <button class="btn btn-primary" onclick="respondInvite('${appt.id}','accept')">✅ 승낙</button>
+          <button class="btn btn-secondary" onclick="respondInvite('${appt.id}','reject')">❌ 거절</button>
+        </div>`}
+    </div>`;
+
+  if (appt.place === "미정" && !appt.confirmed) {
+    html += renderVoteSection(appt);
+  }
+
+  if (inModal) {
+    document.getElementById("inviteModalContent").innerHTML = html + `<button class="btn btn-secondary mt" onclick="closeModal('inviteModal')">닫기</button>`;
+    document.getElementById("inviteModal").classList.add("open");
+  } else {
+    document.getElementById("inviteContent").innerHTML = `<div class="card">${html}</div>`;
+  }
+}
+
+function renderVoteSection(appt) {
+  const tally = {};
+  Object.values(appt.votes || {}).forEach(v => tally[v] = (tally[v]||0)+1);
+  return `
+    <div style="margin-top:16px; text-align:left;">
+      <div class="section-label">📍 장소 투표</div>
+      ${(appt.vote_places||[]).map(p => `<div class="pending-item"><span>${p} ${tally[p] ? `(${tally[p]}표)`:""}</span><button class="btn btn-primary btn-sm" onclick="castVote('${appt.id}','${p}')">투표</button></div>`).join("")}
+      <div class="flex gap mt">
+        <input type="text" id="newPlace_${appt.id}" placeholder="장소 제안하기" style="flex:1; margin-bottom:0;">
+        <button class="btn btn-secondary btn-sm" onclick="suggestPlace('${appt.id}')">제안</button>
+      </div>
+    </div>`;
+}
+
+async function respondInvite(aid, action) {
+  const res = await fetch(`/respond/${aid}`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ action }) });
+  const data = await res.json();
+  if (data.status === "pending") alert("주최자의 승인을 기다려요!");
+  else alert("거절했어요.");
+}
+
+async function suggestPlace(aid) {
+  const input = document.getElementById(`newPlace_${aid}`);
+  const place = input.value.trim();
+  if (!place) return;
+  await fetch(`/vote_place/${aid}`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ suggest: place }) });
+  input.value = "";
+  const data = await fetchAppt(aid);
+  showInviteCard(data.appointment, false);
+}
+
+async function castVote(aid, place) {
+  await fetch(`/vote_place/${aid}`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ vote: place }) });
+  const res = await fetch(`/vote_result/${aid}`);
+  const data = await res.json();
+  if (data.tie && data.result.length > 1) {
+    const choice = confirm(`동률이에요! (${data.result.join(", ")})\n돌림판으로 결정할까요?`);
+    if (choice) openSpinner(data.result);
+  } else if (data.result) {
+    alert(`현재 1위: ${data.result[0]}`);
+  }
+  const apptData = await fetchAppt(aid);
+  showInviteCard(apptData.appointment, false);
+}
+
+function openSpinner(items) {
+  spinItems = items;
+  document.getElementById("spinnerResult").textContent = "";
+  document.getElementById("spinnerModal").classList.add("open");
+  drawWheel(items);
+}
+
+function drawWheel(items) {
+  const canvas = document.getElementById("spinnerCanvas");
+  const ctx = canvas.getContext("2d");
+  const colors = ["#5b6af0","#a78bfa","#60a5fa","#34d399","#f472b6","#fb923c"];
+  const arc = (Math.PI * 2) / items.length;
+  ctx.clearRect(0,0,260,260);
+  items.forEach((item, i) => {
+    ctx.beginPath();
+    ctx.moveTo(130,130);
+    ctx.arc(130,130,120, arc*i - Math.PI/2, arc*(i+1) - Math.PI/2);
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fill();
+    ctx.save();
+    ctx.translate(130,130);
+    ctx.rotate(arc*i + arc/2 - Math.PI/2);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 14px sans-serif";
+    ctx.fillText(item, 110, 5);
+    ctx.restore();
+  });
+}
+
+function spinWheel() {
+  const canvas = document.getElementById("spinnerCanvas");
+  const ctx = canvas.getContext("2d");
+  const total = spinItems.length;
+  const arc = (Math.PI * 2) / total;
+  const spins = Math.floor(Math.random()*5+5);
+  const extra = Math.random() * Math.PI * 2;
+  const totalAngle = spins * Math.PI * 2 + extra;
+  let start = null;
+  const duration = 3000;
+  let currentAngle = 0;
+
+  function animate(ts) {
+    if (!start) start = ts;
+    const elapsed = ts - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    currentAngle = totalAngle * eased;
+
+    ctx.clearRect(0,0,260,260);
+    ctx.save();
+    ctx.translate(130,130);
+    ctx.rotate(currentAngle);
+    ctx.translate(-130,-130);
+    drawWheel(spinItems);
+    ctx.restore();
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      const winIdx = Math.floor(((totalAngle % (Math.PI*2)) / (Math.PI*2)) * total);
+      document.getElementById("spinnerResult").textContent = `🎉 ${spinItems[winIdx % total]}`;
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+async function fetchAppt(aid) {
+  const res = await fetch(`/get/${aid}`);
+  return res.json();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove("open");
+}
+
+function startPolling(aid) {
+  setInterval(async () => {
+    if (!document.getElementById("createdModal").classList.contains("open")) return;
+    const data = await fetchAppt(aid);
+    if (data.ok) renderHostPanel(data.appointment);
+  }, 3000);
+}
+
+function changeName() {
+  const name = prompt("이름을 입력하세요:");
+  if (!name) return;
+  fetch("/set_name", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ name }) })
+    .then(() => location.reload());
+}
+
+init();
+</script>
+</body>
+</html>
